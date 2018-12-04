@@ -23,9 +23,7 @@
 			H(qubit);
             let res = M (qubit);
 
-			if(res==One){
-				set toRet = true;
-			}
+			set toRet = res == One;
 
             Set(Zero, qubit);
         }
@@ -35,18 +33,31 @@
 
 	operation Next(initial: Result, min: Int, max: Int): (Int){
 		mutable toRet = min;
+		mutable randNumber = 0;
 
 		using(qubit = Qubit()){
-			for(i in 1..(max-min)){
+			
+			// 64 is the size of Int
+			// 63 is the size of Int minus the signed bit
+			for(i in 1..63){
 				Set (initial, qubit);
-				if(NextBoolean(initial)){
-					set toRet = toRet + 1;
-				}
 
-				Set(Zero, qubit);
+				// Shift number to the right by one
+				set randNumber = randNumber <<< 1;
+
+				// Set bit on first position (the newly created position)
+				// and either set it to 1 if the quantum types are with us.
+				if(NextBoolean(initial)){
+					set randNumber = randNumber ^^^ 1;
+				}
 			}
+
+			// This is were the random generated number is getting trimmed
+			// to the actual range between min and max.
+			set randNumber=randNumber%(max-min);
+			Set(Zero, qubit);
 		}
 
-		return toRet;
+		return toRet + randNumber;
 	}
 }
